@@ -61,7 +61,7 @@ static VALUE video_hash_for(VALUE self, VALUE _filename) {
     args.filename = StringValuePtr(_filename);
     args.retval = -1;
 
-    rb_thread_call_without_gvl((void *(*)(void *))nogvl_hash,
+    rb_thread_call_without_gvl((void *(*)(void *))nogvl_video_hash,
         (void *)&args, RUBY_UBF_PROCESS, 0);
 
     if (-1 == args.retval) {
