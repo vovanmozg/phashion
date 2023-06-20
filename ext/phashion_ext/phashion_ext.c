@@ -28,6 +28,16 @@ static void * nogvl_hash(struct nogvl_hash_args * args) {
   return NULL;
 }
 
+static void * nogvl_video_hash(struct nogvl_hash_args * args) {
+  ulong64 hash;
+
+  args->retval = ph_dct_videohash(args->filename, hash);
+  args->hash = hash;
+
+  return NULL;
+}
+
+
 static VALUE image_hash_for(VALUE self, VALUE _filename) {
     ulong64 hash;
     struct nogvl_hash_args args;
@@ -44,6 +54,21 @@ static VALUE image_hash_for(VALUE self, VALUE _filename) {
     return ULL2NUM(args.hash);
 }
 
+static VALUE video_hash_for(VALUE self, VALUE _filename) {
+    ulong64 hash;
+    struct nogvl_hash_args args;
+
+    args.filename = StringValuePtr(_filename);
+    args.retval = -1;
+
+    rb_thread_call_without_gvl((void *(*)(void *))nogvl_video_hash,
+        (void *)&args, RUBY_UBF_PROCESS, 0);
+
+    if (-1 == args.retval) {
+      rb_raise(rb_eRuntimeError, "Unknown pHash error");
+    }
+    return ULL2NUM(args.hash);
+}
 
 static VALUE hamming_distance(VALUE self, VALUE a, VALUE b) {
     int result = 0;
@@ -187,10 +212,10 @@ extern "C" {
 
     rb_define_singleton_method(c, "hamming_distance", (VALUE(*)(ANYARGS))hamming_distance, 2);
     rb_define_singleton_method(c, "image_hash_for", (VALUE(*)(ANYARGS))image_hash_for, 1);
-      
+
     rb_define_singleton_method(c, "_mh_hash_for", (VALUE(*)(ANYARGS))mh_hash_for, 3);
     rb_define_singleton_method(c, "hamming_distance2", (VALUE(*)(ANYARGS))hamming_distance2, 2);
-      
+
     rb_define_singleton_method(c, "texthash_for", (VALUE(*)(ANYARGS))texthash_for, 1);
     rb_define_singleton_method(c, "textmatches_for", (VALUE(*)(ANYARGS))textmatches_for, 2);
   }

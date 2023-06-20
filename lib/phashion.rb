@@ -48,6 +48,17 @@ module Phashion
     end
   end
 
+  class Video
+    attr_reader :filename
+    def initialize(filename)
+      @filename = filename
+    end
+
+    def fingerprint
+      @hash ||= Phashion.video_hash_for(@filename)
+    end
+  end
+
   def self.mh_hash_for(filename, alpha = 2.0, lvl = 1.0)
     _mh_hash_for(filename, alpha, lvl)
   end
